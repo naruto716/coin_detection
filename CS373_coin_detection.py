@@ -11,6 +11,7 @@ from matplotlib.patches import Rectangle
 import imageIO.png
 from Utils.contrast_stretch import contrast_stretch
 from Utils.convert_to_greyscale import convert_to_greyscale
+from Utils.edge_detection import edge_map
 
 # Define constant and global variables
 TEST_MODE = False    # Please, DO NOT change this variable!
@@ -93,6 +94,7 @@ def main(input_path, output_path):
     ###################################
     px_array_grey = convert_to_greyscale(px_array_r, px_array_g, px_array_b)
     px_stretched_array_grey = contrast_stretch(px_array_grey)
+    px_edge = edge_map(px_stretched_array_grey)
     
     
     
@@ -110,7 +112,7 @@ def main(input_path, output_path):
     ############################################
     
     bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
-    px_array = px_stretched_array_grey
+    px_array = px_edge
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
