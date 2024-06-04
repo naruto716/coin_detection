@@ -10,9 +10,11 @@ from matplotlib.patches import Rectangle
 # import our basic, light-weight png reader library
 import imageIO.png
 from Utils.adaptive_thresholding import adaptive_thresholding
+from Utils.connectedness_analysis import connected_region_labelling
 from Utils.contrast_stretch import contrast_stretch, get_histogram
 from Utils.convert_to_greyscale import convert_to_greyscale
 from Utils.edge_detection import edge_map
+from Utils.find_region_bound import find_region_bounds
 from Utils.mean_filter import image_blur
 from Utils.morphology import dilate, erode
 from Utils.show_histogram import plot_histogram
@@ -80,7 +82,7 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue=0)
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'easy_case_1'
+    image_name = 'easy_case_6'
     input_filename = f'./Images/easy/{image_name}.png'
     if TEST_MODE:
         input_filename = input_path
@@ -103,7 +105,21 @@ def main(input_path, output_path):
         px_morph = dilate(px_morph)
     for i in range(3):
         px_morph = erode(px_morph)
+    # Step 6
+    labeled_image, region_dict = connected_region_labelling(px_morph)
+    # Step 7
+    region_bounds = find_region_bounds(labeled_image)
+    # Initialize an empty list to store the bounding boxes
+    bounding_box_list = []
 
+    # Iterate through the region_bounds to create bounding boxes
+    for label, coords in region_bounds.items():
+        min_coords = (coords['min_x'], coords['min_y'])
+        max_coords = (coords['max_x'], coords['max_y'])
+        bounding_box = [min_coords[0], min_coords[1], max_coords[0], max_coords[1]]
+        bounding_box_list.append(bounding_box)
+
+    """
     ############################################
     ### Bounding box coordinates information ###
     ### bounding_box[0] = min x
@@ -113,25 +129,29 @@ def main(input_path, output_path):
     ############################################
 
     bounding_box_list = [
-        [150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
-    px_array = px_morph
+        [150, 140, 200, 190]
+    ]  # This is a dummy bounding box list, please comment it out when testing your own code.
+    """
+    picture_array_reconstructed = [[[px_array_r[y][x], px_array_g[y][x], px_array_b[y][x]] for x in range(image_width)]
+                                   for y in
+                                   range(image_height)]
+    px_array = picture_array_reconstructed
 
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
-    """
+
     # Loop through all bounding boxes
     for bounding_box in bounding_box_list:
         bbox_min_x = bounding_box[0]
         bbox_min_y = bounding_box[1]
         bbox_max_x = bounding_box[2]
         bbox_max_y = bounding_box[3]
-        
+
         bbox_xy = (bbox_min_x, bbox_min_y)
         bbox_width = bbox_max_x - bbox_min_x
         bbox_height = bbox_max_y - bbox_min_y
         rect = Rectangle(bbox_xy, bbox_width, bbox_height, linewidth=2, edgecolor='r', facecolor='none')
         axs.add_patch(rect)
-    """
 
     pyplot.axis('off')
     pyplot.tight_layout()
