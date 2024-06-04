@@ -9,12 +9,17 @@ from matplotlib.patches import Rectangle
 
 # import our basic, light-weight png reader library
 import imageIO.png
-from Utils.contrast_stretch import contrast_stretch
+from Utils.adaptive_thresholding import adaptive_thresholding
+from Utils.contrast_stretch import contrast_stretch, get_histogram
 from Utils.convert_to_greyscale import convert_to_greyscale
 from Utils.edge_detection import edge_map
+from Utils.mean_filter import image_blur
+from Utils.show_histogram import plot_histogram
+from Utils.threshold_image import threshold_image
 
 # Define constant and global variables
-TEST_MODE = False    # Please, DO NOT change this variable!
+TEST_MODE = False  # Please, DO NOT change this variable!
+
 
 def readRGBImageToSeparatePixelArrays(input_filename):
     image_reader = imageIO.png.Reader(filename=input_filename)
@@ -53,8 +58,9 @@ def readRGBImageToSeparatePixelArrays(input_filename):
 
     return (image_width, image_height, pixel_array_r, pixel_array_g, pixel_array_b)
 
+
 # a useful shortcut method to create a list of lists based array representation for an image, initialized with a value
-def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 0):
+def createInitializedGreyscalePixelArray(image_width, image_height, initValue=0):
     new_pixel_array = []
     for _ in range(image_height):
         new_row = []
@@ -70,13 +76,6 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
 ###########################################
 
 
-
-
-
-
-
-
-
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
@@ -88,21 +87,16 @@ def main(input_path, output_path):
     # we read in the png file, and receive three pixel arrays for red, green and blue components, respectively
     # each pixel array contains 8 bit integer values between 0 and 255 encoding the color values
     (image_width, image_height, px_array_r, px_array_g, px_array_b) = readRGBImageToSeparatePixelArrays(input_filename)
-    
+
     ###################################
     ### STUDENT IMPLEMENTATION Here ###
     ###################################
     px_array_grey = convert_to_greyscale(px_array_r, px_array_g, px_array_b)
-    px_stretched_array_grey = contrast_stretch(px_array_grey)
-    px_edge = edge_map(px_stretched_array_grey)
-    
-    
-    
-    
-    
-    
-    
-    
+    px_stretched_array_grey = contrast_stretch(px_array_grey)  # Step 1
+    px_edge = edge_map(px_stretched_array_grey)  # Step 2
+    px_blurred = image_blur(px_edge, times=3)  # Step 3
+    px_threshold = threshold_image(px_blurred, threshold=22)  # Step 4
+
     ############################################
     ### Bounding box coordinates information ###
     ### bounding_box[0] = min x
@@ -110,13 +104,14 @@ def main(input_path, output_path):
     ### bounding_box[2] = max x
     ### bounding_box[3] = max y
     ############################################
-    
-    bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
-    px_array = px_edge
-    
+
+    bounding_box_list = [
+        [150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
+    px_array = px_threshold
+
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
-    
+    """
     # Loop through all bounding boxes
     for bounding_box in bounding_box_list:
         bbox_min_x = bounding_box[0]
@@ -129,14 +124,15 @@ def main(input_path, output_path):
         bbox_height = bbox_max_y - bbox_min_y
         rect = Rectangle(bbox_xy, bbox_width, bbox_height, linewidth=2, edgecolor='r', facecolor='none')
         axs.add_patch(rect)
-        
+    """
+
     pyplot.axis('off')
     pyplot.tight_layout()
     default_output_path = f'./output_images/{image_name}_with_bbox.png'
     if not TEST_MODE:
         # Saving output image to the above directory
         pyplot.savefig(default_output_path, bbox_inches='tight', pad_inches=0)
-        
+
         # Show image with bounding box on the screen
         pyplot.imshow(px_array, cmap='gray', aspect='equal')
         pyplot.show()
@@ -145,16 +141,14 @@ def main(input_path, output_path):
         pyplot.savefig(output_path, bbox_inches='tight', pad_inches=0)
 
 
-
 if __name__ == "__main__":
     num_of_args = len(sys.argv) - 1
-    
+
     input_path = None
     output_path = None
     if num_of_args > 0:
         input_path = sys.argv[1]
         output_path = sys.argv[2]
         TEST_MODE = True
-    
+
     main(input_path, output_path)
-    
