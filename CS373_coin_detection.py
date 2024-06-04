@@ -14,6 +14,7 @@ from Utils.contrast_stretch import contrast_stretch, get_histogram
 from Utils.convert_to_greyscale import convert_to_greyscale
 from Utils.edge_detection import edge_map
 from Utils.mean_filter import image_blur
+from Utils.morphology import dilate, erode
 from Utils.show_histogram import plot_histogram
 from Utils.threshold_image import threshold_image
 
@@ -96,6 +97,12 @@ def main(input_path, output_path):
     px_edge = edge_map(px_stretched_array_grey)  # Step 2
     px_blurred = image_blur(px_edge, times=3)  # Step 3
     px_threshold = threshold_image(px_blurred, threshold=22)  # Step 4
+    # Step 5
+    px_morph = px_threshold
+    for i in range(5):
+        px_morph = dilate(px_morph)
+    for i in range(3):
+        px_morph = erode(px_morph)
 
     ############################################
     ### Bounding box coordinates information ###
@@ -107,7 +114,7 @@ def main(input_path, output_path):
 
     bounding_box_list = [
         [150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
-    px_array = px_threshold
+    px_array = px_morph
 
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
