@@ -1,8 +1,13 @@
+import math
+
+
 def get_histogram(px_array_grey):
     histogram = [0] * 256
     for row in px_array_grey:
         for pixel in row:
-            histogram[round(pixel)] += 1
+            abs_pixel = int(abs(pixel))
+            if 0 <= abs_pixel <= 255:
+                histogram[abs_pixel] += 1
     return histogram
 
 

@@ -30,6 +30,13 @@ def edge_filter_y(px_stretched_grey):
     return border_ignore_filter(px_stretched_grey, scharr_x_kernel)
 
 
+def laplacian_filter(px_stretched_grey):
+    laplacian_kernel = [[1.0, 1.0, 1.0],
+                        [1.0, -8.0, 1.0],
+                        [1.0, 1.0, 1.0]]
+    return border_ignore_filter(px_stretched_grey, laplacian_kernel)
+
+
 def edge_map(px_stretched_grey):
     gx = edge_filter_x(px_stretched_grey)
     gy = edge_filter_y(px_stretched_grey)

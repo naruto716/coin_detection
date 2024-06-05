@@ -1,4 +1,6 @@
 # Unused
+from Utils.histogram import get_histogram
+
 
 def adaptive_thresholding(H):
     N = sum(H)
@@ -27,3 +29,8 @@ def adaptive_thresholding(H):
         theta_j = theta_j1
 
     return theta_j
+
+
+def get_adaptive_thresholding(pixel_array):
+    histogram = get_histogram(pixel_array)
+    return adaptive_thresholding(histogram)

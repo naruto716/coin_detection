@@ -1,20 +1,25 @@
 # Built in packages
+import math
 import sys
 
-# Matplotlib will need to be installed if it isn't already. This is the only package allowed for this base part of the
+# Matplotlib will need to be installed if it isn't already. This is the only package allowed for this base part of the 
 # assignment.
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
 
 # import our basic, light-weight png reader library
 import imageIO.png
+from Utils.adaptive_thresholding import get_adaptive_thresholding
 from Utils.connectedness_analysis import connected_region_labelling
-from Utils.contrast_stretch import contrast_stretch
+from Utils.contrast_stretch import contrast_stretch, get_histogram
 from Utils.convert_to_greyscale import convert_to_greyscale
-from Utils.edge_detection import edge_map
-from Utils.find_region_bound import find_region_bounds
+from Utils.edge_detection import edge_map, laplacian_filter
+from Utils.find_region_bound import find_region_bounds, find_valid_region_bounds
+from Utils.identify_coin import identify_coin
 from Utils.mean_filter import image_blur
+from Utils.median_filter import apply_median
 from Utils.morphology import dilate, erode
+from Utils.show_histogram import plot_histogram
 from Utils.threshold_image import threshold_image
 
 # Define constant and global variables
@@ -79,8 +84,8 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue=0)
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'easy_case_6'
-    input_filename = f'./Images/easy/{image_name}.png'
+    image_name = 'hard_case_3'
+    input_filename = f'./Images/hard/{image_name}.png'
     if TEST_MODE:
         input_filename = input_path
 
@@ -92,20 +97,25 @@ def main(input_path, output_path):
     ### STUDENT IMPLEMENTATION Here ###
     ###################################
     px_array_grey = convert_to_greyscale(px_array_r, px_array_g, px_array_b)
-    px_stretched_array_grey = contrast_stretch(px_array_grey)  # Step 1
-    px_edge = edge_map(px_stretched_array_grey)  # Step 2
-    px_blurred = image_blur(px_edge, times=3)  # Step 3
-    px_threshold = threshold_image(px_blurred, threshold=22)  # Step 4
+    px_stretched_array_grey = contrast_stretch(px_array_grey)
+    px_edge = laplacian_filter(px_stretched_array_grey)
+    px_median = apply_median(px_edge, times=3)
+
+    threshold = get_adaptive_thresholding(px_median)
+    px_threshold = threshold_image(px_median, threshold=threshold)
     # Step 5
     px_morph = px_threshold
+
     for i in range(5):
         px_morph = dilate(px_morph)
-    for i in range(3):
+    for i in range(4):
         px_morph = erode(px_morph)
+
+
     # Step 6
     labeled_image, region_dict = connected_region_labelling(px_morph)
     # Step 7
-    region_bounds = find_region_bounds(labeled_image)
+    region_bounds, max_coins = find_valid_region_bounds(labeled_image)
     # Initialize an empty list to store the bounding boxes
     bounding_box_list = []
 
@@ -138,7 +148,7 @@ def main(input_path, output_path):
     axs.imshow(px_array, aspect='equal')
 
     # Loop through all bounding boxes
-    for bounding_box in bounding_box_list:
+    for label, bounding_box in zip(region_bounds.keys(), bounding_box_list):
         bbox_min_x = bounding_box[0]
         bbox_min_y = bounding_box[1]
         bbox_max_x = bounding_box[2]
@@ -149,6 +159,14 @@ def main(input_path, output_path):
         bbox_height = bbox_max_y - bbox_min_y
         rect = Rectangle(bbox_xy, bbox_width, bbox_height, linewidth=2, edgecolor='r', facecolor='none')
         axs.add_patch(rect)
+
+        # Add the coin value near the bounding box
+        coin_value = label
+        text_x = bbox_min_x + 5
+        text_y = bbox_min_y + 35  # Adjust the vertical position of the text
+        axs.text(text_x, text_y, str(coin_value), color='b', fontsize=12)
+        axs.text(text_x, bbox_max_y - 25, identify_coin(bbox_width * bbox_height), color='b', fontsize=12)
+    axs.text(30, 50, "Coins detected:" + str(max_coins), color='g', fontsize=12)
 
     pyplot.axis('off')
     pyplot.tight_layout()
