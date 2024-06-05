@@ -84,7 +84,7 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue=0)
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'hard_case_3'
+    image_name = 'hard_case_1'
     input_filename = f'./Images/hard/{image_name}.png'
     if TEST_MODE:
         input_filename = input_path
