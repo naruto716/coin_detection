@@ -106,7 +106,7 @@ def main(input_path, output_path):
     # Step 5
     px_morph = px_threshold
 
-    for i in range(5):
+    for i in range(3):
         px_morph = dilate(px_morph)
     for i in range(4):
         px_morph = erode(px_morph)

@@ -11,7 +11,7 @@ def border_ignore_filter(pixel_array, kernel):
                     image_value = pixel_array[row + i][col + j]
                     kernel_value = kernel[i + 1][j + 1]  # +1 to shift
                     accumulator += image_value * kernel_value
-            result_array[row][col] = accumulator
+            result_array[row][col] = abs(accumulator)
 
     return result_array
 
